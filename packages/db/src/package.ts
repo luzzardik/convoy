@@ -1,5 +1,5 @@
 // Imports
-import { PrismaClient } from './prisma/client.js';
+import { Convoy, PrismaClient } from './prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { extendPrismaClient } from 'prisma-prefixed-ids';
 import { ModelName } from './prisma/internal/prismaNamespace.js';
@@ -37,4 +37,10 @@ export * from './prisma/client.js';
 
 // Export DTOs
 // TOD: implement DTOViewer
-export const DTO = {};
+export const DTO = {
+	formatConvoy(convoy: Partial<Convoy>) {
+		let c: Partial<Convoy> = JSON.parse(JSON.stringify(convoy));
+		delete c.organizerPasswordHash;
+		return c;
+	},
+};
