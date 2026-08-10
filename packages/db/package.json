@@ -1,0 +1,35 @@
+{
+	"name": "@convoy/db",
+	"type": "module",
+	"version": "1.0.0",
+	"description": "Convoy Prisma wrapper",
+	"main": "./dist/package.js",
+	"types": "./dist/package.d.ts",
+	"repository": "https://github.com/luzzardik/convoy.git",
+	"author": "Kacy Luzzardi <kacy@bunn.it>",
+	"license": "SEE LICENSE.MD",
+	"private": true,
+	"scripts": {
+		"db:generate": "npx prisma generate",
+		"db:migrate": "npx prisma migrate dev",
+		"db:deploy": "npx prisma migrate deploy",
+		"build": "npx prisma generate && tsc",
+		"dev": "npx prisma generate && concurrently \"tsc --watch\" \"chokidar 'prisma/schema.prisma' -c 'npx prisma generate'\""
+	},
+	"devDependencies": {
+		"@types/node": "^26.0.0",
+		"@types/pg": "^8.20.0",
+		"chokidar": "^5.0.0",
+		"concurrently": "^10.0.3",
+		"prisma": "^7.8.0",
+		"tsx": "^4.22.4",
+		"typescript": "^6.0.3"
+	},
+	"dependencies": {
+		"@prisma/adapter-pg": "^7.8.0",
+		"@prisma/client": "^7.8.0",
+		"dotenv": "^17.4.2",
+		"pg": "^8.22.0",
+		"prisma-prefixed-ids": "^2.1.0"
+	}
+}

@@ -1,0 +1,41 @@
+/**
+ * *  PRISMA CONFIGURATION
+ */
+
+// Generator
+generator client {
+  provider = "prisma-client"
+  output   = "../src/prisma"
+}
+
+// Datasource
+datasource db {
+  provider = "postgresql"
+}
+
+/**
+ * *  CONVOYS
+ */
+
+// ConvoyStatus
+enum ConvoyStatus {
+  DRAFT
+  READY
+  ACTIVE
+  ARCHIVED
+}
+
+// Convoy
+model Convoy {
+  id String @id @default(nanoid())
+
+  status ConvoyStatus @default(DRAFT)
+
+  name String
+  accessCode String @unique
+
+  organizerPasswordHash String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
