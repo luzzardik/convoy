@@ -1,6 +1,6 @@
 # Convoy
 
-Convoy est une application web de gestion de convoi automobile inspirée de [Roads Tour](https://github.com/killianeletellier/roads_tour), construit originellement pour la [1ère édition du C15 Tour Festival](https://c15tour.fr).
+Convoy est une application web de gestion de convoi automobile inspirée de [Roads Tour](https://github.com/killianeletellier/roads_tour) par [Killiane Letellier (ce goat absolu)](https://github.com/killianeletellier), construit originellement pour la [1ère édition du C15 Tour Festival](https://c15tour.fr).
 
 ## Stack
 
