@@ -9,4 +9,6 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Convoy.js'
+export type * from './models/ConvoySegment.js'
+export type * from './models/ConvoyPOI.js'
 export type * from './commonInputTypes.js'

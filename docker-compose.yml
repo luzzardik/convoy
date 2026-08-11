@@ -34,3 +34,4 @@ services:
 volumes:
   pgdata:
   osrm-data:
+    external: true

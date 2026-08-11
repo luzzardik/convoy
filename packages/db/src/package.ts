@@ -14,6 +14,8 @@ const globalForPrisma = globalThis as unknown as {
 // ID Prefixes
 const prefixes: Record<ModelName, string> = {
 	Convoy: 'cv',
+	ConvoyPOI: 'cvp',
+	ConvoySegment: 'cvs',
 };
 
 // Create or reuse adapter

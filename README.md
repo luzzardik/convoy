@@ -195,7 +195,7 @@ chmod +x scripts/download-osrm.sh docker/osrm/prepare.sh
 ls -lh docker/osrm/data/region.osm.pbf
 head -c 20 docker/osrm/data/region.osm.pbf | xxd   # attendu : 0a… (protobuf), PAS HTML
 
-./docker/osrm/prepare.sh docker/osrm/data/region.osm.pbf --prod
+./docker/osrm/prepare.sh docker/osrm/data/region.osm.pbf --volume
 ```
 
 Vous pouvez lister les régions courantes à l'aide de la commande `./scripts/download-osrm.sh --list`.

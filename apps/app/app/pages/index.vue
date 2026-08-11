@@ -28,11 +28,13 @@ const convoyError = ref<string | null>(null);
 async function joinConvoy() {
 	// Is loading ?
 	if (convoyLoading.value) return;
+
 	// Is convoy code populated ?
 	if (convoyCode.value.trim().length == 0) {
 		convoyError.value = useErrorCode('convoy_code_required');
 		return;
 	}
+
 	// Fetch convoy
 	try {
 		let _q = await fetch(`/api/convoy/${convoyCode.value}`).then((_q) => _q.json());

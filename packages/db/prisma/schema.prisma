@@ -36,6 +36,46 @@ model Convoy {
 
   organizerPasswordHash String @unique
 
+  segments ConvoySegment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ConvoySegment
+model ConvoySegment {
+  id String @id @default(nanoid())
+
+  convoyId String
+  convoy Convoy @relation(references: [id], fields: [convoyId], onDelete: Cascade)
+
+  name String @default("")
+  order Int
+
+  geometry Json
+  lengthInMeters Float
+  durationInMinutes Float
+
+  poi ConvoyPOI?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([convoyId])
+}
+
+// ConvoyPOI
+model ConvoyPOI {
+  id String @id @default(nanoid())
+
+  segmentId String @unique
+  segment ConvoySegment @relation(references: [id], fields: [segmentId], onDelete: Cascade)
+
+  label String
+
+  lat Float
+  lon Float
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

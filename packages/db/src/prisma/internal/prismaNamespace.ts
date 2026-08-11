@@ -397,7 +397,9 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  Convoy: 'Convoy'
+  Convoy: 'Convoy',
+  ConvoySegment: 'ConvoySegment',
+  ConvoyPOI: 'ConvoyPOI'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -413,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "convoy"
+    modelProps: "convoy" | "convoySegment" | "convoyPOI"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -491,6 +493,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ConvoySegment: {
+      payload: Prisma.$ConvoySegmentPayload<ExtArgs>
+      fields: Prisma.ConvoySegmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ConvoySegmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ConvoySegmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>
+        }
+        findFirst: {
+          args: Prisma.ConvoySegmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ConvoySegmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>
+        }
+        findMany: {
+          args: Prisma.ConvoySegmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>[]
+        }
+        create: {
+          args: Prisma.ConvoySegmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>
+        }
+        createMany: {
+          args: Prisma.ConvoySegmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ConvoySegmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>[]
+        }
+        delete: {
+          args: Prisma.ConvoySegmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>
+        }
+        update: {
+          args: Prisma.ConvoySegmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.ConvoySegmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ConvoySegmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ConvoySegmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.ConvoySegmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoySegmentPayload>
+        }
+        aggregate: {
+          args: Prisma.ConvoySegmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateConvoySegment>
+        }
+        groupBy: {
+          args: Prisma.ConvoySegmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ConvoySegmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ConvoySegmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ConvoySegmentCountAggregateOutputType> | number
+        }
+      }
+    }
+    ConvoyPOI: {
+      payload: Prisma.$ConvoyPOIPayload<ExtArgs>
+      fields: Prisma.ConvoyPOIFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ConvoyPOIFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ConvoyPOIFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>
+        }
+        findFirst: {
+          args: Prisma.ConvoyPOIFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ConvoyPOIFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>
+        }
+        findMany: {
+          args: Prisma.ConvoyPOIFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>[]
+        }
+        create: {
+          args: Prisma.ConvoyPOICreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>
+        }
+        createMany: {
+          args: Prisma.ConvoyPOICreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ConvoyPOICreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>[]
+        }
+        delete: {
+          args: Prisma.ConvoyPOIDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>
+        }
+        update: {
+          args: Prisma.ConvoyPOIUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>
+        }
+        deleteMany: {
+          args: Prisma.ConvoyPOIDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ConvoyPOIUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ConvoyPOIUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>[]
+        }
+        upsert: {
+          args: Prisma.ConvoyPOIUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConvoyPOIPayload>
+        }
+        aggregate: {
+          args: Prisma.ConvoyPOIAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateConvoyPOI>
+        }
+        groupBy: {
+          args: Prisma.ConvoyPOIGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ConvoyPOIGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ConvoyPOICountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ConvoyPOICountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -543,6 +693,34 @@ export const ConvoyScalarFieldEnum = {
 export type ConvoyScalarFieldEnum = (typeof ConvoyScalarFieldEnum)[keyof typeof ConvoyScalarFieldEnum]
 
 
+export const ConvoySegmentScalarFieldEnum = {
+  id: 'id',
+  convoyId: 'convoyId',
+  name: 'name',
+  order: 'order',
+  geometry: 'geometry',
+  lengthInMeters: 'lengthInMeters',
+  durationInMinutes: 'durationInMinutes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ConvoySegmentScalarFieldEnum = (typeof ConvoySegmentScalarFieldEnum)[keyof typeof ConvoySegmentScalarFieldEnum]
+
+
+export const ConvoyPOIScalarFieldEnum = {
+  id: 'id',
+  segmentId: 'segmentId',
+  label: 'label',
+  lat: 'lat',
+  lon: 'lon',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ConvoyPOIScalarFieldEnum = (typeof ConvoyPOIScalarFieldEnum)[keyof typeof ConvoyPOIScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -551,12 +729,28 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -618,6 +812,34 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -772,6 +994,8 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   convoy?: Prisma.ConvoyOmit
+  convoySegment?: Prisma.ConvoySegmentOmit
+  convoyPOI?: Prisma.ConvoyPOIOmit
 }
 
 /* Types for Logging */

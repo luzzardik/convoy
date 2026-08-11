@@ -51,7 +51,9 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  Convoy: 'Convoy'
+  Convoy: 'Convoy',
+  ConvoySegment: 'ConvoySegment',
+  ConvoyPOI: 'ConvoyPOI'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -83,6 +85,34 @@ export const ConvoyScalarFieldEnum = {
 export type ConvoyScalarFieldEnum = (typeof ConvoyScalarFieldEnum)[keyof typeof ConvoyScalarFieldEnum]
 
 
+export const ConvoySegmentScalarFieldEnum = {
+  id: 'id',
+  convoyId: 'convoyId',
+  name: 'name',
+  order: 'order',
+  geometry: 'geometry',
+  lengthInMeters: 'lengthInMeters',
+  durationInMinutes: 'durationInMinutes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ConvoySegmentScalarFieldEnum = (typeof ConvoySegmentScalarFieldEnum)[keyof typeof ConvoySegmentScalarFieldEnum]
+
+
+export const ConvoyPOIScalarFieldEnum = {
+  id: 'id',
+  segmentId: 'segmentId',
+  label: 'label',
+  lat: 'lat',
+  lon: 'lon',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ConvoyPOIScalarFieldEnum = (typeof ConvoyPOIScalarFieldEnum)[keyof typeof ConvoyPOIScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -91,10 +121,26 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

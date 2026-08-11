@@ -1,5 +1,6 @@
 {
 	"$schema": "https://turborepo.dev/schema.json",
+	"globalPassThroughEnv": ["POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_PORT", "DATABASE_URL", "JWT_SECRET", "USE_JWKS_REPOSITORY", "ALLOW_INSECURE_SECRETS", "ADMIN_PASSWORD", "OBSERVER_PASSWORD", "APP_DOMAIN"],
 	"ui": "tui",
 	"tasks": {
 		"build": {

@@ -12,10 +12,15 @@ export default defineNuxtConfig({
 	// Vite
 	vite: {
 		plugins: [tailwindcss()],
+		server: {
+			proxy: {
+				'/api/osrm': { target: 'http://loalhost:5000', changeOrigin: true },
+			},
+		},
 	},
 
 	// Modules
-	modules: ['shadcn-nuxt'],
+	modules: ['shadcn-nuxt', '@pinia/nuxt', 'nuxt-maplibre'],
 	shadcn: {
 		prefix: '',
 	},

@@ -3,7 +3,7 @@
 	"private": true,
 	"scripts": {
 		"build": "turbo run build",
-		"dev": "turbo run dev",
+		"dev": "dotenv-run turbo run dev",
 		"lint": "turbo run lint",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
 		"check-types": "turbo run check-types"
@@ -25,5 +25,8 @@
 	"workspaces": [
 		"apps/*",
 		"packages/*"
-	]
+	],
+	"dependencies": {
+		"dotenv-run": "^0.0.1"
+	}
 }

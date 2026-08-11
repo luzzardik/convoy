@@ -22,3 +22,13 @@ export * from './enums.js';
  * 
  */
 export type Convoy = Prisma.ConvoyModel
+/**
+ * Model ConvoySegment
+ * 
+ */
+export type ConvoySegment = Prisma.ConvoySegmentModel
+/**
+ * Model ConvoyPOI
+ * 
+ */
+export type ConvoyPOI = Prisma.ConvoyPOIModel

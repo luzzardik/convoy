@@ -198,6 +198,7 @@ export type ConvoyWhereInput = {
   organizerPasswordHash?: Prisma.StringFilter<"Convoy"> | string
   createdAt?: Prisma.DateTimeFilter<"Convoy"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Convoy"> | Date | string
+  segments?: Prisma.ConvoySegmentListRelationFilter
 }
 
 export type ConvoyOrderByWithRelationInput = {
@@ -208,6 +209,7 @@ export type ConvoyOrderByWithRelationInput = {
   organizerPasswordHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  segments?: Prisma.ConvoySegmentOrderByRelationAggregateInput
 }
 
 export type ConvoyWhereUniqueInput = Prisma.AtLeast<{
@@ -221,6 +223,7 @@ export type ConvoyWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Convoy"> | string
   createdAt?: Prisma.DateTimeFilter<"Convoy"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Convoy"> | Date | string
+  segments?: Prisma.ConvoySegmentListRelationFilter
 }, "id" | "accessCode" | "organizerPasswordHash">
 
 export type ConvoyOrderByWithAggregationInput = {
@@ -257,6 +260,7 @@ export type ConvoyCreateInput = {
   organizerPasswordHash: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  segments?: Prisma.ConvoySegmentCreateNestedManyWithoutConvoyInput
 }
 
 export type ConvoyUncheckedCreateInput = {
@@ -267,6 +271,7 @@ export type ConvoyUncheckedCreateInput = {
   organizerPasswordHash: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  segments?: Prisma.ConvoySegmentUncheckedCreateNestedManyWithoutConvoyInput
 }
 
 export type ConvoyUpdateInput = {
@@ -277,6 +282,7 @@ export type ConvoyUpdateInput = {
   organizerPasswordHash?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  segments?: Prisma.ConvoySegmentUpdateManyWithoutConvoyNestedInput
 }
 
 export type ConvoyUncheckedUpdateInput = {
@@ -287,6 +293,7 @@ export type ConvoyUncheckedUpdateInput = {
   organizerPasswordHash?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  segments?: Prisma.ConvoySegmentUncheckedUpdateManyWithoutConvoyNestedInput
 }
 
 export type ConvoyCreateManyInput = {
@@ -349,6 +356,11 @@ export type ConvoyMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type ConvoyScalarRelationFilter = {
+  is?: Prisma.ConvoyWhereInput
+  isNot?: Prisma.ConvoyWhereInput
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -361,6 +373,105 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type ConvoyCreateNestedOneWithoutSegmentsInput = {
+  create?: Prisma.XOR<Prisma.ConvoyCreateWithoutSegmentsInput, Prisma.ConvoyUncheckedCreateWithoutSegmentsInput>
+  connectOrCreate?: Prisma.ConvoyCreateOrConnectWithoutSegmentsInput
+  connect?: Prisma.ConvoyWhereUniqueInput
+}
+
+export type ConvoyUpdateOneRequiredWithoutSegmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.ConvoyCreateWithoutSegmentsInput, Prisma.ConvoyUncheckedCreateWithoutSegmentsInput>
+  connectOrCreate?: Prisma.ConvoyCreateOrConnectWithoutSegmentsInput
+  upsert?: Prisma.ConvoyUpsertWithoutSegmentsInput
+  connect?: Prisma.ConvoyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ConvoyUpdateToOneWithWhereWithoutSegmentsInput, Prisma.ConvoyUpdateWithoutSegmentsInput>, Prisma.ConvoyUncheckedUpdateWithoutSegmentsInput>
+}
+
+export type ConvoyCreateWithoutSegmentsInput = {
+  id?: string
+  status?: $Enums.ConvoyStatus
+  name: string
+  accessCode: string
+  organizerPasswordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type ConvoyUncheckedCreateWithoutSegmentsInput = {
+  id?: string
+  status?: $Enums.ConvoyStatus
+  name: string
+  accessCode: string
+  organizerPasswordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type ConvoyCreateOrConnectWithoutSegmentsInput = {
+  where: Prisma.ConvoyWhereUniqueInput
+  create: Prisma.XOR<Prisma.ConvoyCreateWithoutSegmentsInput, Prisma.ConvoyUncheckedCreateWithoutSegmentsInput>
+}
+
+export type ConvoyUpsertWithoutSegmentsInput = {
+  update: Prisma.XOR<Prisma.ConvoyUpdateWithoutSegmentsInput, Prisma.ConvoyUncheckedUpdateWithoutSegmentsInput>
+  create: Prisma.XOR<Prisma.ConvoyCreateWithoutSegmentsInput, Prisma.ConvoyUncheckedCreateWithoutSegmentsInput>
+  where?: Prisma.ConvoyWhereInput
+}
+
+export type ConvoyUpdateToOneWithWhereWithoutSegmentsInput = {
+  where?: Prisma.ConvoyWhereInput
+  data: Prisma.XOR<Prisma.ConvoyUpdateWithoutSegmentsInput, Prisma.ConvoyUncheckedUpdateWithoutSegmentsInput>
+}
+
+export type ConvoyUpdateWithoutSegmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumConvoyStatusFieldUpdateOperationsInput | $Enums.ConvoyStatus
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  accessCode?: Prisma.StringFieldUpdateOperationsInput | string
+  organizerPasswordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type ConvoyUncheckedUpdateWithoutSegmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumConvoyStatusFieldUpdateOperationsInput | $Enums.ConvoyStatus
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  accessCode?: Prisma.StringFieldUpdateOperationsInput | string
+  organizerPasswordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type ConvoyCountOutputType
+ */
+
+export type ConvoyCountOutputType = {
+  segments: number
+}
+
+export type ConvoyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  segments?: boolean | ConvoyCountOutputTypeCountSegmentsArgs
+}
+
+/**
+ * ConvoyCountOutputType without action
+ */
+export type ConvoyCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ConvoyCountOutputType
+   */
+  select?: Prisma.ConvoyCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ConvoyCountOutputType without action
+ */
+export type ConvoyCountOutputTypeCountSegmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ConvoySegmentWhereInput
+}
 
 
 export type ConvoySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -371,6 +482,8 @@ export type ConvoySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   organizerPasswordHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  segments?: boolean | Prisma.Convoy$segmentsArgs<ExtArgs>
+  _count?: boolean | Prisma.ConvoyCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["convoy"]>
 
 export type ConvoySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -404,10 +517,18 @@ export type ConvoySelectScalar = {
 }
 
 export type ConvoyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "name" | "accessCode" | "organizerPasswordHash" | "createdAt" | "updatedAt", ExtArgs["result"]["convoy"]>
+export type ConvoyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  segments?: boolean | Prisma.Convoy$segmentsArgs<ExtArgs>
+  _count?: boolean | Prisma.ConvoyCountOutputTypeDefaultArgs<ExtArgs>
+}
+export type ConvoyIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type ConvoyIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $ConvoyPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Convoy"
-  objects: {}
+  objects: {
+    segments: Prisma.$ConvoySegmentPayload<ExtArgs>[]
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     status: $Enums.ConvoyStatus
@@ -810,6 +931,7 @@ readonly fields: ConvoyFieldRefs;
  */
 export interface Prisma__ConvoyClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  segments<T extends Prisma.Convoy$segmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Convoy$segmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ConvoySegmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -863,6 +985,10 @@ export type ConvoyFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.Intern
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
+  /**
    * Filter, which Convoy to fetch.
    */
   where: Prisma.ConvoyWhereUniqueInput
@@ -881,6 +1007,10 @@ export type ConvoyFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extensions
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
+  /**
    * Filter, which Convoy to fetch.
    */
   where: Prisma.ConvoyWhereUniqueInput
@@ -898,6 +1028,10 @@ export type ConvoyFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Omit specific fields from the Convoy
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
   /**
    * Filter, which Convoy to fetch.
    */
@@ -947,6 +1081,10 @@ export type ConvoyFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions.
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
+  /**
    * Filter, which Convoy to fetch.
    */
   where?: Prisma.ConvoyWhereInput
@@ -994,6 +1132,10 @@ export type ConvoyFindManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Omit specific fields from the Convoy
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
   /**
    * Filter, which Convoys to fetch.
    */
@@ -1043,6 +1185,10 @@ export type ConvoyCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
+  /**
    * The data needed to create a Convoy.
    */
   data: Prisma.XOR<Prisma.ConvoyCreateInput, Prisma.ConvoyUncheckedCreateInput>
@@ -1090,6 +1236,10 @@ export type ConvoyUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Omit specific fields from the Convoy
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
   /**
    * The data needed to update a Convoy.
    */
@@ -1157,6 +1307,10 @@ export type ConvoyUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
+  /**
    * The filter to search for the Convoy to update in case it exists.
    */
   where: Prisma.ConvoyWhereUniqueInput
@@ -1183,6 +1337,10 @@ export type ConvoyDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
+  /**
    * Filter which Convoy to delete.
    */
   where: Prisma.ConvoyWhereUniqueInput
@@ -1203,6 +1361,30 @@ export type ConvoyDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
 }
 
 /**
+ * Convoy.segments
+ */
+export type Convoy$segmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ConvoySegment
+   */
+  select?: Prisma.ConvoySegmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ConvoySegment
+   */
+  omit?: Prisma.ConvoySegmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoySegmentInclude<ExtArgs> | null
+  where?: Prisma.ConvoySegmentWhereInput
+  orderBy?: Prisma.ConvoySegmentOrderByWithRelationInput | Prisma.ConvoySegmentOrderByWithRelationInput[]
+  cursor?: Prisma.ConvoySegmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ConvoySegmentScalarFieldEnum | Prisma.ConvoySegmentScalarFieldEnum[]
+}
+
+/**
  * Convoy without action
  */
 export type ConvoyDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1214,4 +1396,8 @@ export type ConvoyDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the Convoy
    */
   omit?: Prisma.ConvoyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConvoyInclude<ExtArgs> | null
 }
