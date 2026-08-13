@@ -109,7 +109,7 @@ const MAP_STYLE: any = {
 	layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
 
-// Convoys
+// Convoy
 const convoy = ref<(Convoy & { segments: (ConvoySegment & { poi: ConvoyPOI })[] }) | null>(null);
 const convoyLoading = ref(true);
 async function fetchConvoy() {

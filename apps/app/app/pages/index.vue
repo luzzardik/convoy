@@ -9,7 +9,7 @@
 				<h2>Rejoindre un convoi</h2>
 			</div>
 			<div class="space-y-2 w-full">
-				<Input type="text" placeholder="Code du convoi" v-model="convoyCode" @click="joinConvoy" />
+				<Input type="text" placeholder="Code du convoi" v-model="convoyCode" @keyup.enter="joinConvoy" />
 				<Button class="w-full" size="lg" @click="joinConvoy">Rejoindre</Button>
 				<div v-if="convoyError" class="text-destructive text-sm">{{ convoyError ?? 'Une erreur est survenue.' }}</div>
 			</div>
