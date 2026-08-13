@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 	if (!updateMap) return replyWithError(event, 'bad_request', 400);
 	// Deletions
 	if (Array.isArray(updateMap.delete)) {
-		const deleteKeys = updateMap.delete.filter((f) => typeof f == 'string');
+		const deleteKeys = updateMap.delete.filter((f: any) => typeof f == 'string');
 		await prisma.convoySegment.deleteMany({
 			where: { convoyId: convoy.id, id: { in: deleteKeys } },
 		});
