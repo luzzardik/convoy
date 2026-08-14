@@ -225,3 +225,14 @@ export class Sequence {
 		return sequence;
 	}
 }
+
+// ConvoyWSSession
+export type ConvoyWSSession = {
+	sub: string;
+	mode: 'user' | 'organizer';
+	username: string;
+	displayname?: string;
+	role: 'user' | 'regulator' | 'head' | 'opener' | 'sweep';
+	convoyId: string;
+	joinedAt: number;
+};
