@@ -30,6 +30,7 @@ export default defineNuxtConfig({
 		'/navigate': { ssr: false },
 		'/admin/convoys': { ssr: false },
 		'/admin/convoys/**': { ssr: false },
+		'/observer': { ssr: false },
 	},
 
 	// Nitro (WS)

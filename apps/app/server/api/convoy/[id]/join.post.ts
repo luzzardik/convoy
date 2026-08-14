@@ -62,5 +62,5 @@ export default defineEventHandler(async (event) => {
 		joinedAt: Date.now(),
 	});
 	// Return token
-	return token;
+	return { token };
 });
