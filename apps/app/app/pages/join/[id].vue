@@ -93,7 +93,7 @@ async function joinConvoy() {
 	try {
 		let _q = await fetch(`/api/convoy/${$route.params.id}/join`, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } }).then((_q) => _q.json());
 		if (_q.error || _q.errors) throw _q.errors ? _q.errors[0] : _q.error;
-		// TODO: save token
+		localStorage.setItem('cvytk', _q.token);
 		navigateTo('/navigate');
 	} catch (e) {
 		console.error('Something went wrong whilst exchanging convoy token', e);
