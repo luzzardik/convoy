@@ -24,4 +24,10 @@ export default defineNuxtConfig({
 	shadcn: {
 		prefix: '',
 	},
+
+	// Route rules
+	routeRules: {
+		'/admin/convoys': { ssr: false },
+		'/admin/convoys/**': { ssr: false },
+	},
 });
