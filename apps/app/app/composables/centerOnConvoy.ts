@@ -14,5 +14,5 @@ export default function centerOnConvoy(convoy: Convoy & { segments: ConvoySegmen
 	if (bounds.isEmpty()) return;
 	const map = useMglMap().map;
 	if (!map) return;
-	map.fitBounds(bounds, { padding: 60, duration: 800, maxZoom: 14 });
+	map.fitBounds(bounds, { padding: 120, duration: 800, maxZoom: 13 });
 }
