@@ -122,7 +122,7 @@ export default defineEventHandler(async (event) => {
 				poi: {
 					lat: last.lat,
 					lon: last.lon,
-					label: poiLabel,
+					label: trk.name ?? poiLabel,
 				},
 			});
 		}

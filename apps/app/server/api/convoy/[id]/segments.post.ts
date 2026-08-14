@@ -37,6 +37,14 @@ export default defineEventHandler(async (event) => {
 					data: {
 						name: typeof update.name == 'string' ? xss(update.name) : undefined,
 						order: typeof update.order == 'number' ? update.order : undefined,
+						poi:
+							typeof update.name == 'string'
+								? {
+										update: {
+											label: xss(update.name),
+										},
+									}
+								: undefined,
 					},
 				})
 			);
