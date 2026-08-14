@@ -4,33 +4,38 @@
 		<ClientOnly>
 			<MglMap :mapStyle="MAP_STYLE" :center="MAP_CENTER" :zoom="9">
 				<MglNavigationControl :showCompass="false" />
+				<!-- Route GeoJSON (primary) -->
+				<MglGeoJsonSource v-if="routeGeoJSON" source-id="route-geojson" :data="routeGeoJSON">
+					<MglLineLayer layer-id="route-geojson" :paint="{ 'line-color': '#000000', 'line-width': 5 }" />
+				</MglGeoJsonSource>
+				<!-- Recalculated route (off-route) -->
+				<MglGeoJsonSource v-if="recalcGeoJSON" source-id="recalc-geojson" :data="recalcGeoJSON">
+					<MglLineLayer layer-id="recalc-geojson" :paint="{ 'line-color': '#000000', 'line-width': 4, 'line-dasharray': [2, 2] }" />
+				</MglGeoJsonSource>
 				<template v-if="convoy" v-for="segment in convoy.segments">
-					<MglGeoJsonSource :source-id="segment.id" :data="segment.geometry">
-						<MglLineLayer :layer-id="segment.id" :paint="{ 'line-color': '#000000', 'line-width': 4 }" />
-						<!-- TODO: member marker <MglMarker v-if="segment.poi" :coordinates="[segment.poi.lon, segment.poi.lat]">
-  							<template v-slot:marker>
-  								<div class="size-6 border-2 border-white rounded-full flex items-center justify-center text-white text-sm font-bold shadow bg-primary">T</div>
-  							</template>
-  							</MglMarker>-->
-						<!-- TODO: poi highlight + pulse -->
-						<MglMarker v-if="segment.poi" :coordinates="[segment.poi.lon, segment.poi.lat]">
-							<template v-slot:marker>
-								<div class="relative flex flex-col items-center pointer-events-none">
-									<div class="relative z-1 size-8 rounded-full bg-primary text-primary-foreground border-3 border-white shadow flex items-center justify-center font-bold text-[1rem] leading-0">{{ segment.order + 1 }}</div>
-									<div v-if="segment.name" class="relative z-1 max-w-sm py-0.5 px-1.5 bg-primary-foreground text-primary font-bold text-center nowrap overflow-hidden ellipsis shadow rounded">{{ segment.name }}</div>
-								</div>
-							</template>
-						</MglMarker>
-						<MglMarker v-if="$geo.coords?.value && $geo.coords?.value?.longitude && $geo.coords?.value?.latitude" :coordinates="[$geo.coords.value.longitude, $geo.coords.value.latitude]">
-							<template v-slot:marker>
-								<div class="relative size-7">
-									<div class="absolute rounded-full bg-primary/5 animate-pulse" style="inset: -6px"></div>
-									<div class="absolute rounded-full bg-primary border-3 border-primary-foreground shadow-lg" style="inset: 4px"></div>
-									<div v-if="$geo.coords.value.heading" class="absolute -top-2 left-1/2 size-0 -ml-1.5 border-l-6 border-r-6 border-l-transparent border-r-transparent border-b-10 border-b-primary shadow-2xl" :style="`transform: rotate(${$geo.coords.value.heading}deg); transform-origin: 50% calc(100% + 14px);`"></div>
-								</div>
-							</template>
-						</MglMarker>
-					</MglGeoJsonSource>
+					<!-- TODO: member marker <MglMarker v-if="segment.poi" :coordinates="[segment.poi.lon, segment.poi.lat]">
+ 							<template v-slot:marker>
+								<div class="size-6 border-2 border-white rounded-full flex items-center justify-center text-white text-sm font-bold shadow bg-primary">T</div>
+ 							</template>
+ 							</MglMarker>-->
+					<!-- TODO: poi highlight + pulse -->
+					<MglMarker v-if="segment.poi" :coordinates="[segment.poi.lon, segment.poi.lat]">
+						<template v-slot:marker>
+							<div class="relative flex flex-col items-center pointer-events-none">
+								<div class="relative z-1 size-8 rounded-full bg-primary text-primary-foreground border-3 border-white shadow flex items-center justify-center font-bold text-[1rem] leading-0">{{ segment.order + 1 }}</div>
+								<div v-if="segment.name" class="relative z-1 max-w-sm py-0.5 px-1.5 bg-primary-foreground text-primary font-bold text-center nowrap overflow-hidden ellipsis shadow rounded">{{ segment.name }}</div>
+							</div>
+						</template>
+					</MglMarker>
+					<MglMarker v-if="$geo.coords?.value && $geo.coords?.value?.longitude && $geo.coords?.value?.latitude" :coordinates="[$geo.coords.value.longitude, $geo.coords.value.latitude]">
+						<template v-slot:marker>
+							<div class="relative size-7">
+								<div class="absolute rounded-full bg-primary/5 animate-pulse" style="inset: -6px"></div>
+								<div class="absolute rounded-full bg-primary border-3 border-primary-foreground shadow-lg" style="inset: 4px"></div>
+								<div v-if="$geo.coords.value.heading" class="absolute -top-2 left-1/2 size-0 -ml-1.5 border-l-6 border-r-6 border-l-transparent border-r-transparent border-b-10 border-b-primary shadow-2xl" :style="`transform: rotate(${$geo.coords.value.heading}deg); transform-origin: 50% calc(100% + 14px);`"></div>
+							</div>
+						</template>
+					</MglMarker>
 				</template>
 			</MglMap>
 		</ClientOnly>
@@ -42,29 +47,31 @@
 		<div class="mb-2 bg-red-100 text-red-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'disconnected'"><PlugZap2Icon class="size-4" /> Connexion perdue.</div>
 		<div class="mb-2 bg-orange-100 text-orange-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'connecting'"><PlugZap2Icon class="size-4" /> Connexion en cours...</div>
 		<div class="mb-2 bg-indigo-100 text-indigo-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'authenticating'"><Loader2Icon class="animate-spin size-4" /> Identification auprès du serveur...</div>
+		<!-- Off route issue -->
+		<div class="mb-2 bg-red-100 text-red-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-if="isOffRoute"><MapPinXInsideIcon class="size-4" /> Hors tracé ({{ formatDistance(offRouteDistance) }}).</div>
 		<!-- Directions -->
 		<div class="divide-y">
 			<div class="flex items-center gap-4 pb-4">
-				<ArrowLeftIcon class="size-10 text-primary" />
+				<component :is="instructionsFormatted.icon" class="size-10 text-primary" />
 				<div>
-					<div class="text-sm">Dans XX mètres</div>
-					<div class="font-bold text-lg text-primary">Tournez à gauche</div>
-					<div class="text-xs">Rue de je sais pas</div>
+					<div class="text-sm">{{ instructionsFormatted.distance }}</div>
+					<div class="font-bold text-lg text-primary">{{ instructionsFormatted.name }}</div>
+					<div class="text-xs">{{ instructionsFormatted.modifier }}</div>
 				</div>
 			</div>
 			<div class="flex items-center divide-x gap-4 py-4">
 				<div class="flex-1">
 					<div class="uppercase text-xs text-muted-foreground">Prochain point de passage</div>
 					<div class="flex items-baseline gap-2">
-						<div class="text-lg font-bold">Valeur</div>
-						<div class="text-sm text-muted-foreground">· Détail</div>
+						<div class="text-lg font-bold">{{ nextPointLabel ?? '-' }}</div>
+						<div class="text-sm text-muted-foreground">· {{ distanceToNextM ? formatDistance(distanceToNextM) : '-' }}</div>
 					</div>
 				</div>
 				<div class="flex-1">
 					<div class="uppercase text-xs text-muted-foreground">Arrivée</div>
 					<div class="flex items-baseline gap-2">
-						<div class="text-lg font-bold">Valeur</div>
-						<div class="text-sm text-muted-foreground">· Détail</div>
+						<div class="text-lg font-bold">{{ etaMinutesFromSpeed ? formatDuration(etaMinutesFromSpeed) : estimatedMinutesRemaining ? formatDuration(estimatedMinutesRemaining) : '-' }}</div>
+						<div class="text-sm text-muted-foreground">· {{ totalRemainingM ? formatDistance(totalRemainingM) : '-' }}</div>
 					</div>
 				</div>
 			</div>
@@ -73,6 +80,7 @@
 		<div v-if="convoy || wsSession" class="text-xs text-muted-foreground divide-x flex items-center justify-center">
 			<span class="px-2" v-if="convoy">{{ convoy.name }}</span>
 			<span class="px-2" v-if="wsSession && (wsSession.displayname || wsSession.username)">{{ wsSession.displayname || wsSession.username }}</span>
+			<span class="px-2" v-if="wsSession && wsSession.mode == 'organizer'">Organisateur ({{ wsSession.role }})</span>
 		</div>
 	</div>
 </template>
@@ -80,9 +88,10 @@
 <script setup lang="ts">
 // Imports
 import type { Convoy, ConvoySegment, ConvoyPOI } from '@convoy/db';
-import { Loader2Icon, PlugZap2Icon, ArrowLeftIcon, ArrowRightIcon } from '@lucide/vue';
+import { Loader2Icon, PlugZap2Icon, MapPinXInsideIcon } from '@lucide/vue';
 import * as WSH from '~~/shared/websockets';
 import { useGeolocation } from '@vueuse/core';
+import { useRouteNav } from '../composables/useRouteNav';
 
 // Page meta
 useSeoMeta({ title: 'Convoi - Convoy' });
@@ -116,6 +125,20 @@ let ucInterval = setInterval(() => updateCoords(), 500);
 // Convoy
 type CompleteConvoy = Convoy & { segments: (ConvoySegment & { poi: ConvoyPOI })[] };
 const convoy = ref<CompleteConvoy | null>(null);
+
+// Navigation composable (OSRM)
+const userLoc = computed(() => {
+	if (!$geo.coords.value?.longitude || !$geo.coords.value?.latitude) return null;
+	return [$geo.coords.value.longitude, $geo.coords.value.latitude] as [number, number];
+});
+const _osrmUrlRaw = useRuntimeConfig().public?.osrmUrl ?? import.meta.env.VITE_OSRM_URL ?? '/api/osrm';
+const osrmUrl = _osrmUrlRaw.startsWith('/') || _osrmUrlRaw.startsWith('http') ? _osrmUrlRaw : '/' + _osrmUrlRaw;
+const { routeGeoJSON, recalcGeoJSON, currentInstruction, nextPointLabel, distanceToNextM, offRouteDistance, estimatedMinutesRemaining, totalRemainingM, etaMinutesFromSpeed, isOffRoute } = useRouteNav(convoy, userLoc, {
+	osrmUrl,
+	onOffRoute: (d) => console.debug('[route] off-route', d),
+	onOsrmError: (m) => console.warn('[route] osrm', m),
+});
+const instructionsFormatted = useOSRMInstruction(currentInstruction as any, nextPointLabel, distanceToNextM);
 
 // Websocket
 const websocketStatus = ref<'connecting' | 'authenticating' | 'connected' | 'disconnected'>('disconnected');

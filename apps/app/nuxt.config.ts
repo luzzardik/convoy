@@ -14,7 +14,7 @@ export default defineNuxtConfig({
 		plugins: [tailwindcss()],
 		server: {
 			proxy: {
-				'/api/osrm': { target: 'http://loalhost:5000', changeOrigin: true },
+				'/api/osrm': { target: 'http://localhost:5000', changeOrigin: true, rewrite: (path) => path.replace(/^\/api\/osrm/, '') },
 			},
 		},
 	},
