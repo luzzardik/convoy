@@ -30,4 +30,11 @@ export default defineNuxtConfig({
 		'/admin/convoys': { ssr: false },
 		'/admin/convoys/**': { ssr: false },
 	},
+
+	// Nitro (WS)
+	nitro: {
+		experimental: {
+			websocket: true,
+		},
+	},
 });
