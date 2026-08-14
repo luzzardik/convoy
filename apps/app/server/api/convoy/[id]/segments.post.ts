@@ -37,6 +37,7 @@ export default defineEventHandler(async (event) => {
 					data: {
 						name: typeof update.name == 'string' ? xss(update.name) : undefined,
 						order: typeof update.order == 'number' ? update.order : undefined,
+						// TODO: update if POI available only to prevent op fail
 						poi:
 							typeof update.name == 'string'
 								? {
@@ -54,14 +55,14 @@ export default defineEventHandler(async (event) => {
 	// Fix order
 	const segments = await prisma.convoySegment.findMany({ where: { convoyId: convoy.id }, orderBy: { order: 'asc' } });
 	await prisma.$transaction(
-		segments.map((segment, index) =>
-			prisma.convoySegment.update({
+		segments.map((segment, index) => {
+			return prisma.convoySegment.update({
 				where: { id: segment.id },
 				data: {
 					order: index,
 				},
-			})
-		)
+			});
+		})
 	);
 	// OK.
 	return { ok: true };
