@@ -4,8 +4,8 @@ Convoy est une application web de gestion de convoi automobile inspirée de [Roa
 
 ## Stack
 
-- Monorepo géré via **Turbo Repo**
-- Typescript-first
+- Monorepo géré via **Turborepo**
+- TypeScript-first
 - Frontend : Nuxt 3, MapLibre GL JS, PWA, shadcn-vue
 - Backend (API/WS) : Node 20+, Express, Socket.io
 - Base de données : Prisma ORM, PostgreSQL
@@ -47,17 +47,17 @@ convoy
 ```sh
 cp .env.example .env        # obligatoire pour configurer DATABASE_URL
 npm install                 # installe les dépendances npm
-npm run db:generate         # génére les types du client Prisma
+npm run db:generate         # génère les types du client Prisma
 ```
 
-### Démarrer PostgresSQL
+### Démarrer PostgreSQL
 
 ```sh
 docker compose up postgres -d       # démarre PostgreSQL à l'aide de Docker Compose
 npm run db:migrate                  # crée les tables et structures
 ```
 
-> **Port 5433** : en développement, PostgreSQL Docker est exposé sur le port 5433 (et non 5432 par défaut) pour éviter les conflits avec le PostgreSQL natif déjà installé sur MacOS. Si vous n'avez pas de Postgres local, vous pouvez remettre `5432:5432` dans `docker-compose.yml` et `localhost:5432` dans `.env` même si ce n'est pas nécessaire.
+> **Port 5433** : en développement, PostgreSQL en conteneur est exposé sur le port 5433 (et non 5432 par défaut) pour éviter les conflits avec le PostgreSQL natif déjà installé sur macOS. Si vous n'avez pas de PostgreSQL local, vous pouvez remettre `5432:5432` dans `docker-compose.yml` et `localhost:5432` dans `.env`.
 
 ### OSRM (optionnel en développement)
 
@@ -82,7 +82,7 @@ docker compose --profile osrm up osrm -d
 
 ### Lancer l'application
 
-Contraitement à Roads Tour, Convoy utilise un manager de monorepo qui permet de lancer l'ensemble des applications via un TUI.
+Contrairement à Roads Tour, Convoy utilise un gestionnaire de monorepo (Turborepo) permettant de lancer l'ensemble des applications via une interface TUI.
 
 ```sh
 # À la racine du projet
@@ -178,7 +178,7 @@ cp .env.prod.example .env.prod
 
 ### Préparer OSRM
 
-OSRM n'est **pas** exposé publiquement ; seul le contenur `app` y accède.
+OSRM n'est **pas** exposé publiquement ; seul le conteneur `app` y accède.
 
 ```sh
 mkdir -p docker/osrm/data
@@ -205,8 +205,8 @@ Pour un autre région, vous pouvez utiliser `./scripts/download-osrm.sh <region>
 La préparation OSRM créera un volume appelé `convoy_osrm-data` (nom du projet Compose + nom du volume). Vérifiez qu'il existe bien et que tout fonctionne à l'aide des commande suivantes :
 
 ```sh
-docker volume inspect roads-tour_osrm-data
-docker run --rm -v roads-tour_osrm-data:/data alpine:3.20 ls -la /data
+docker volume inspect convoy_osrm-data
+docker run --rm -v convoy_osrm-data:/data alpine:3.20 ls -la /data
 # Attendu : region.osrm, region.osrm.cells, region.osrm.mldgr, etc.
 ```
 
@@ -244,7 +244,7 @@ Vous pourrez en suite lancer le script :
 ./scripts/init-ssl.sh
 ```
 
-Ce script démarrera l'ensemble des conteneurs, dont nginx en mode bootstrap HTTP, obtiendra un certificat à l'aide de Certbot (webroot) et redémarrera nginx en mode HTTPS ainsi que certbot pour renouveller le certificat toutes les 12 heures.
+Ce script démarrera l'ensemble des conteneurs, dont nginx en mode bootstrap HTTP, obtiendra un certificat à l'aide de Certbot (webroot) et redémarrera nginx en mode HTTPS ainsi que certbot pour renouveler le certificat toutes les 12 heures.
 
 À l'issue du script, vous pourrez vérifier que HTTPS est bien accessible :
 
@@ -364,7 +364,7 @@ Vous pourrez trouver l'un de ces messages fréquents dans les logs :
 | Log                                                  | Cause                                         | Action                                                                                      |
 | ---------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `Set JWT_SECRET in .env.prod` / `Set ADMIN_PASSWORD` | Secrets encore aux valeurs du template        | Renseigner des secrets forts dans `.env.prod`, ou temporairement `ALLOW_INSECURE_SECRETS=1` |
-| `PostgreSQL not reachable`                           | Postgres pas prêt ou `DATABASE_URL` incorrect | `docker logs roads-tour-postgres`, vérifier user/password/db                                |
+| `PostgreSQL not reachable`                           | Postgres pas prêt ou `DATABASE_URL` incorrect | `docker logs convoy-postgres`, vérifier user/password/db                                |
 | `Prisma migrate deploy failed`                       | Schéma DB incompatible ou droits manquants    | Vérifier `DATABASE_URL`, logs postgres                                                      |
 | `Cannot find module ... bcrypt_lib.node`             | Module natif non compilé (image ancienne)     | `docker compose ... up -d --build` pour reconstruire l'image                                |
 | `Client build not found at ...`                      | Build client absent de l'image                | Rebuild complet : `--build --no-cache`                                                      |
