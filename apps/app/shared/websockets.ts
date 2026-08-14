@@ -236,3 +236,42 @@ export type ConvoyWSSession = {
 	convoyId: string;
 	joinedAt: number;
 };
+
+// PositionPayload
+export type PositionPayload = {
+	sub: string;
+	lon: number;
+	lat: number;
+	heading?: number;
+	ts: number;
+	displayname?: string;
+	username?: string;
+};
+
+export function parsePositionPayload(payload: Uint8Array): PositionPayload | null {
+	try {
+		const obj = JSON.parse(new TextDecoder().decode(payload));
+		if (obj?.sub && typeof obj.lon === 'number' && typeof obj.lat === 'number') {
+			return {
+				sub: obj.sub,
+				lon: obj.lon,
+				lat: obj.lat,
+				heading: typeof obj.heading === 'number' ? obj.heading : undefined,
+				ts: typeof obj.ts === 'number' ? obj.ts : Date.now(),
+				displayname: typeof obj.displayname === 'string' ? obj.displayname : undefined,
+				username: typeof obj.username === 'string' ? obj.username : undefined,
+			};
+		}
+	} catch {
+		// ignore malformed payloads
+	}
+	return null;
+}
+
+export function encodePositionPayload(data: PositionPayload): Uint8Array {
+	return new TextEncoder().encode(JSON.stringify(data));
+}
+
+export function positionDisplayName(payload: PositionPayload): string {
+	return payload.displayname ?? payload.username ?? payload.sub;
+}

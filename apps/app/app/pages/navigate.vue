@@ -13,11 +13,6 @@
 					<MglLineLayer layer-id="recalc-geojson" :paint="{ 'line-color': '#000000', 'line-width': 4, 'line-dasharray': [2, 2] }" />
 				</MglGeoJsonSource>
 				<template v-if="convoy" v-for="segment in convoy.segments">
-					<!-- TODO: member marker <MglMarker v-if="segment.poi" :coordinates="[segment.poi.lon, segment.poi.lat]">
- 							<template v-slot:marker>
-								<div class="size-6 border-2 border-white rounded-full flex items-center justify-center text-white text-sm font-bold shadow bg-primary">T</div>
- 							</template>
- 							</MglMarker>-->
 					<!-- TODO: poi highlight + pulse -->
 					<MglMarker v-if="segment.poi" :coordinates="[segment.poi.lon, segment.poi.lat]">
 						<template v-slot:marker>
@@ -33,6 +28,18 @@
 								<div class="absolute rounded-full bg-primary/5 animate-pulse" style="inset: -6px"></div>
 								<div class="absolute rounded-full bg-primary border-3 border-primary-foreground shadow-lg" style="inset: 4px"></div>
 								<div v-if="$geo.coords.value.heading" class="absolute -top-2 left-1/2 size-0 -ml-1.5 border-l-6 border-r-6 border-l-transparent border-r-transparent border-b-10 border-b-primary shadow-2xl" :style="`transform: rotate(${$geo.coords.value.heading}deg); transform-origin: 50% calc(100% + 14px);`"></div>
+							</div>
+						</template>
+					</MglMarker>
+				</template>
+
+				<!-- Remote peer positions -->
+				<template v-for="(rp, sub) in remotePositions" :key="sub">
+					<MglMarker :coordinates="[rp.lon, rp.lat]">
+						<template v-slot:marker>
+							<div class="relative size-7">
+								<div class="absolute rounded-full bg-primary border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold" style="inset: 2px">{{ (rp.name || 'A').charAt(0).toUpperCase() }}</div>
+								<div v-if="rp.heading" class="absolute -top-1.5 left-1/2 size-0 -ml-1 border-l-4 border-r-4 border-l-transparent border-r-transparent border-b-7 border-b-primary" :style="`transform: rotate(${rp.heading}deg); transform-origin: 50% calc(100% + 10px);`"></div>
 							</div>
 						</template>
 					</MglMarker>
@@ -140,13 +147,158 @@ const { routeGeoJSON, recalcGeoJSON, currentInstruction, nextPointLabel, distanc
 });
 const instructionsFormatted = useOSRMInstruction(currentInstruction as any, nextPointLabel, distanceToNextM);
 
-// Websocket
+// Websocket constants
+const POSITION_STALE_MS = 15_000;
+const PING_INTERVAL_MS = 25_000;
+const PONG_TIMEOUT_MS = 60_000;
+const RECONNECT_DELAY_MS = 2_000;
+
+// Websocket management
 const websocketStatus = ref<'connecting' | 'authenticating' | 'connected' | 'disconnected'>('disconnected');
 const wsToken = ref<string>();
 const wsSession = ref<WSH.ConvoyWSSession | null>(null);
-let websocket: WebSocket | undefined, cseq: WSH.Sequence | undefined;
+let websocket: WebSocket | undefined;
+let cseq: WSH.Sequence | undefined;
+let shouldReconnect = true;
+let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
+
+// Positions
+const remotePositions = ref<Record<string, { lon: number; lat: number; heading?: number; ts: number; name?: string }>>({});
+let posInterval: ReturnType<typeof setInterval> | undefined;
+let pingInterval: ReturnType<typeof setInterval> | undefined;
+let staleInterval: ReturnType<typeof setInterval> | undefined;
+let lastPong = Date.now();
+
+function applyRemotePosition(payload: WSH.PositionPayload) {
+	if (wsSession.value && payload.sub === wsSession.value.sub) return;
+	remotePositions.value = {
+		...remotePositions.value,
+		[payload.sub]: {
+			lon: payload.lon,
+			lat: payload.lat,
+			heading: payload.heading,
+			ts: payload.ts,
+			name: WSH.positionDisplayName(payload),
+		},
+	};
+}
+
+function pruneStalePositions() {
+	const now = Date.now();
+	const next = { ...remotePositions.value };
+	let changed = false;
+	for (const [sub, pos] of Object.entries(next)) {
+		if (now - pos.ts > POSITION_STALE_MS) {
+			delete next[sub];
+			changed = true;
+		}
+	}
+	if (changed) remotePositions.value = next;
+}
+
+function clearWsIntervals() {
+	if (posInterval) clearInterval(posInterval);
+	if (pingInterval) clearInterval(pingInterval);
+	if (staleInterval) clearInterval(staleInterval);
+	posInterval = pingInterval = staleInterval = undefined;
+}
+
+function startPositionSync() {
+	clearWsIntervals();
+	lastPong = Date.now();
+
+	posInterval = setInterval(() => {
+		if (!websocket || websocket.readyState !== WebSocket.OPEN || !wsSession.value) return;
+		if (!$geo.coords.value?.longitude || !$geo.coords.value?.latitude) return;
+		const payload = WSH.encodePositionPayload({
+			sub: wsSession.value.sub,
+			lon: $geo.coords.value.longitude,
+			lat: $geo.coords.value.latitude,
+			heading: $geo.coords.value.heading ?? undefined,
+			ts: Date.now(),
+			displayname: wsSession.value.displayname,
+			username: wsSession.value.username,
+		});
+		try {
+			websocket.send(WSH.encodeFrame(WSH.CWSMessageType.POSITION, WSH.CWSFlag.ACK_REQUIRED, cseq!.next(), payload));
+		} catch (e) {
+			console.warn('[Websocket] failed to send position', e);
+		}
+	}, 1000);
+
+	pingInterval = setInterval(() => {
+		if (!websocket || websocket.readyState !== WebSocket.OPEN) return;
+		if (Date.now() - lastPong > PONG_TIMEOUT_MS) {
+			websocket.close();
+			return;
+		}
+		try {
+			websocket.send(WSH.encodeFrame(WSH.CWSMessageType.PING, 0, cseq!.next()));
+		} catch (e) {
+			console.warn('[Websocket] failed to send ping', e);
+		}
+	}, PING_INTERVAL_MS);
+
+	staleInterval = setInterval(pruneStalePositions, 5000);
+}
+
+function handleWsMessage(rawmessage: MessageEvent) {
+	const frame = WSH.decodeFrame(rawmessage.data);
+	if (!frame) return;
+
+	switch (frame.type) {
+		case WSH.CWSMessageType.AUTH_REQ:
+			websocket!.send(WSH.encodeFrame(WSH.CWSMessageType.AUTH_JWT, WSH.CWSFlag.ACK_REQUIRED | WSH.CWSFlag.PRIORITY, cseq!.next(), new TextEncoder().encode(wsToken.value)));
+			break;
+
+		case WSH.CWSMessageType.AUTH_ERROR:
+			shouldReconnect = false;
+			navigateTo('/');
+			break;
+
+		case WSH.CWSMessageType.AUTH_OK:
+			wsSession.value = JSON.parse(new TextDecoder().decode(frame.payload));
+			websocketStatus.value = 'connected';
+			fetch('/api/convoy/' + wsSession.value!.convoyId + '?include=segments,segments.poi')
+				.then((_q) => _q.json())
+				.then((convoyData) => {
+					convoy.value = convoyData as CompleteConvoy;
+					centerOnConvoy(convoy.value);
+				})
+				.catch((e) => console.warn('[Websocket] failed to fetch convoy', e));
+			startPositionSync();
+			break;
+
+		case WSH.CWSMessageType.POSITION: {
+			const payload = WSH.parsePositionPayload(frame.payload);
+			if (payload) applyRemotePosition(payload);
+			break;
+		}
+
+		case WSH.CWSMessageType.POSITION_ACK:
+			break;
+
+		case WSH.CWSMessageType.PONG:
+			lastPong = Date.now();
+			break;
+	}
+}
+
+function onWsClose() {
+	websocketStatus.value = 'disconnected';
+	websocket = undefined;
+	cseq = undefined;
+	clearWsIntervals();
+	if (!shouldReconnect) return;
+	reconnectTimeout = setTimeout(createWebsocket, RECONNECT_DELAY_MS);
+}
+
 function createWebsocket() {
-	if (!wsToken.value) return;
+	if (!wsToken.value || !shouldReconnect) return;
+	if (reconnectTimeout) {
+		clearTimeout(reconnectTimeout);
+		reconnectTimeout = undefined;
+	}
 	cseq = new WSH.Sequence();
 	websocket = new WebSocket('/api/ws');
 	websocket.binaryType = 'arraybuffer';
@@ -157,58 +309,30 @@ function createWebsocket() {
 		websocketStatus.value = 'authenticating';
 		websocket!.send(WSH.encodeFrame(WSH.CWSMessageType.HELLO, 0, cseq!.next()));
 	});
-	websocket.addEventListener('message', async (rawmessage) => {
-		console.log('[Websocket] Incoming message');
-		// Validate and decode frame
-		const frame = WSH.decodeFrame(rawmessage.data);
-		if (!frame) return console.error('[Websocket] Received incorrect frame.');
-		console.log('[Websocket] Frame decoded', 'typ', frame.type, 'flags', frame.flags, 'seq', frame.sequence);
-		// Handle frame
-		switch (frame.type) {
-			// Auth required
-			case WSH.CWSMessageType.AUTH_REQ:
-				websocket!.send(WSH.encodeFrame(WSH.CWSMessageType.AUTH_JWT, WSH.CWSFlag.ACK_REQUIRED | WSH.CWSFlag.PRIORITY, cseq!.next(), new TextEncoder().encode(wsToken.value)));
-				break;
-
-			// Auth failed
-			case WSH.CWSMessageType.AUTH_ERROR:
-				// TODO: try to renew the token rather than kill
-				navigateTo('/');
-				break;
-
-			// Auth OK
-			case WSH.CWSMessageType.AUTH_OK:
-				// Decode session
-				const jsonSession = JSON.parse(new TextDecoder().decode(frame.payload));
-				wsSession.value = jsonSession;
-				websocketStatus.value = 'connected';
-				// Fetch convoy
-				const convoyData = await fetch('/api/convoy/' + jsonSession.convoyId + '?include=segments,segments.poi').then((_q) => _q.json());
-				// TODO: manage errors
-				convoy.value = convoyData as CompleteConvoy;
-				centerOnConvoy(convoy.value);
-				break;
-		}
-	});
-	websocket.addEventListener('error', (error) => {
-		console.error('[Websocket] Something went wrong', error);
-	});
-	websocket.addEventListener('close', (e) => {
-		console.log('[Websocket] Disconnected. Reconnecting...');
-		websocketStatus.value = 'disconnected';
-		closeWebsocket();
-		createWebsocket();
-	});
+	websocket.addEventListener('message', handleWsMessage);
+	websocket.addEventListener('error', (error) => console.error('[Websocket] error', error));
+	websocket.addEventListener('close', onWsClose);
 }
+
 function closeWebsocket() {
-	if (websocket) websocket.close();
-	if (websocket) websocket = undefined;
+	shouldReconnect = false;
+	if (reconnectTimeout) {
+		clearTimeout(reconnectTimeout);
+		reconnectTimeout = undefined;
+	}
+	clearWsIntervals();
+	if (websocket) {
+		websocket.removeEventListener('close', onWsClose);
+		websocket.close();
+	}
+	websocket = undefined;
 	cseq = undefined;
 }
 
 // Initialize
 const preparing = ref(true);
 onMounted(() => {
+	shouldReconnect = true;
 	// Convoy Token
 	const cvytk = localStorage.getItem('cvytk');
 	if (!cvytk) return navigateTo('/');
