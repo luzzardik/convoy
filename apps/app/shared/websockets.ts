@@ -229,12 +229,12 @@ export class Sequence {
 // ConvoyWSSession
 export type ConvoyWSSession = {
 	sub: string;
-	mode: 'user' | 'organizer';
+	mode: 'user' | 'organizer' | 'observer';
 	username: string;
 	displayname?: string;
-	role: 'user' | 'regulator' | 'head' | 'opener' | 'sweep';
-	convoyId: string;
-	joinedAt: number;
+	role?: 'user' | 'regulator' | 'head' | 'opener' | 'sweep';
+	convoyId?: string;
+	joinedAt?: number;
 };
 
 // PositionPayload
@@ -248,6 +248,8 @@ export type PositionPayload = {
 	username?: string;
 	// Organizer role when applicable (e.g. 'regulator', 'head', 'opener', 'sweep')
 	role?: 'user' | 'regulator' | 'head' | 'opener' | 'sweep';
+	// When broadcast to observers the server may annotate the payload with convoyId
+	convoyId?: string;
 };
 
 export function parsePositionPayload(payload: Uint8Array): PositionPayload | null {
@@ -263,6 +265,7 @@ export function parsePositionPayload(payload: Uint8Array): PositionPayload | nul
 				displayname: typeof obj.displayname === 'string' ? obj.displayname : undefined,
 				username: typeof obj.username === 'string' ? obj.username : undefined,
 				role: typeof obj.role === 'string' ? obj.role : undefined,
+				convoyId: typeof obj.convoyId === 'string' ? obj.convoyId : undefined,
 			};
 		}
 	} catch {

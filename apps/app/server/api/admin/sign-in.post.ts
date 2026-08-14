@@ -24,7 +24,8 @@ export default defineEventHandler(async (event) => {
 	});
 	// TODO: this is irrevocable, fix it.
 	// Save it as a HTTP-only cookie
-	setCookie(event, 'cast', token, { httpOnly: true, secure: true });
+	const isSecureContext = !!APP_DOMAIN?.startsWith('https://') || process.env.NODE_ENV === 'production';
+	setCookie(event, 'cast', token, { httpOnly: true, secure: isSecureContext, sameSite: 'lax' });
 	// OK.
 	return { ok: true };
 });

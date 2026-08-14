@@ -29,7 +29,11 @@ useSeoMeta({ title: 'Observatoire - Convoy' });
 // Session check
 onMounted(() => {
 	$sess.fetch().then(() => {
-		if ($sess.has('observer')) navigateTo('/observer');
+		// Only redirect to observer dashboard if both server session exists AND the client-side observer token
+		// is present (the token is required for websocket auth). This prevents redirect loops when cookie-only
+		// server sessions exist but localStorage token is missing.
+		const token = import.meta.client ? localStorage.getItem('convoy-observer-token') : null;
+		if ($sess.has('observer') && token) navigateTo('/observer');
 	});
 });
 
@@ -40,10 +44,13 @@ const observerError = ref<string | null>(null);
 async function signAsObserver() {
 	// Is loading ?
 	if (observerLoading.value) return;
+	observerLoading.value = true;
+	observerError.value = null;
 
 	// Is observer password populated ?
 	if (observerPassword.value.trim().length == 0) {
 		observerError.value = useErrorCode('observer_password_required');
+		observerLoading.value = false;
 		return;
 	}
 
@@ -51,6 +58,7 @@ async function signAsObserver() {
 	try {
 		let _q = await fetch(`/api/observer/sign-in`, { method: 'POST', body: JSON.stringify({ password: observerPassword.value }), headers: { 'Content-Type': 'application/json' } }).then((_q) => _q.json());
 		if (_q.error) throw _q.error;
+		if (_q.token) localStorage.setItem('convoy-observer-token', _q.token);
 		navigateTo('/observer');
 	} catch (e) {
 		console.error('An error occured whilst connecting to observer panel:', e);
