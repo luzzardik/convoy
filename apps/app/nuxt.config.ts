@@ -4,7 +4,7 @@ export default defineNuxtConfig({
 	// Developement & Nuxt configuration
 	compatibilityDate: '2025-07-15',
 
-	devtools: { enabled: true },
+	devtools: { enabled: false },
 
 	// Assets
 	css: ['~/assets/style.css'],
@@ -27,6 +27,7 @@ export default defineNuxtConfig({
 
 	// Route rules
 	routeRules: {
+		'/navigate': { ssr: false },
 		'/admin/convoys': { ssr: false },
 		'/admin/convoys/**': { ssr: false },
 	},
