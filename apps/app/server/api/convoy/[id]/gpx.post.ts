@@ -108,23 +108,91 @@ export default defineEventHandler(async (event) => {
 		for (const seg of trksegs) {
 			const points = parsePoints(seg.trkpt);
 			if (points.length < 2) continue;
-			const coords = points.map((p) => [p.lon, p.lat] as [number, number]);
-			const last = points[points.length - 1]!;
-			const lengthMeters = polylineLengthMeters(coords);
-			const segIndex = order + 1;
-			const poiLabel = last.name ?? `POI ${segIndex}`;
-			segments.push({
-				order: order++,
-				name: trk.name ?? poiLabel,
-				geometry: { type: 'LineString', coordinates: coords },
-				lengthMeters,
-				durationMin: estimateDurationMin(lengthMeters),
-				poi: {
-					lat: last.lat,
-					lon: last.lon,
-					label: trk.name ?? poiLabel,
-				},
-			});
+			const trkName = trk.name;
+			// find indices of points that are POIs (have a name)
+			const poiIdxs = points.map((p, i) => (p.name ? i : -1)).filter((i) => i >= 0);
+			if (poiIdxs.length === 0) {
+				// fallback: use last point as POI (original behavior)
+				const coords = points.map((p) => [p.lon, p.lat] as [number, number]);
+				const last = points[points.length - 1]!;
+				const lengthMeters = polylineLengthMeters(coords);
+				const segIndex = order + 1;
+				const poiLabel = last.name ?? `POI ${segIndex}`;
+				segments.push({
+					order: order++,
+					name: trkName ?? poiLabel,
+					geometry: { type: 'LineString', coordinates: coords },
+					lengthMeters,
+					durationMin: estimateDurationMin(lengthMeters),
+					poi: {
+						lat: last.lat,
+						lon: last.lon,
+						label: trkName ?? poiLabel,
+					},
+				});
+			} else {
+				// explode into sub-segments that end at each POI
+				let prev = 0;
+				for (const idx of poiIdxs) {
+					let start = prev;
+					let end = idx;
+					// ensure at least two points in the subsegment
+					if (end - start < 1) {
+						if (idx + 1 < points.length) end = idx + 1;
+						else if (start - 1 >= 0) start = start - 1;
+						else {
+							prev = idx + 1;
+							continue;
+						}
+					}
+					const slice = points.slice(start, end + 1);
+					if (slice.length < 2) {
+						prev = idx + 1;
+						continue;
+					}
+					const coords = slice.map((p) => [p.lon, p.lat] as [number, number]);
+					const poi = points[idx]!;
+					const lengthMeters = polylineLengthMeters(coords);
+					const segIndex = order + 1;
+					const poiLabel = poi.name ?? trkName ?? `POI ${segIndex}`;
+					segments.push({
+						order: order++,
+						name: trkName ?? poiLabel,
+						geometry: { type: 'LineString', coordinates: coords },
+						lengthMeters,
+						durationMin: estimateDurationMin(lengthMeters),
+						poi: {
+							lat: poi.lat,
+							lon: poi.lon,
+							label: poiLabel,
+						},
+					});
+					prev = idx + 1;
+				}
+				// if there are trailing points after last POI, create a final segment ending at last point
+				if (prev < points.length - 1) {
+					const slice = points.slice(prev);
+					if (slice.length >= 2) {
+						const coords = slice.map((p) => [p.lon, p.lat] as [number, number]);
+						const last = points[points.length - 1]!;
+						const lengthMeters = polylineLengthMeters(coords);
+						const segIndex = order + 1;
+						const poiLabel = last.name ?? trkName ?? `POI ${segIndex}`;
+						segments.push({
+							order: order++,
+							name: trkName ?? poiLabel,
+							geometry: { type: 'LineString', coordinates: coords },
+							lengthMeters,
+							durationMin: estimateDurationMin(lengthMeters),
+							poi: {
+								lat: last.lat,
+								lon: last.lon,
+								label: trkName ?? poiLabel,
+							},
+						});
+					}
+				}
+			}
 		}
 	}
 	// Parse routes
@@ -132,24 +200,214 @@ export default defineEventHandler(async (event) => {
 	for (const rte of routes) {
 		const points = parsePoints(rte.rtept);
 		if (points.length < 2) continue;
-		const coords = points.map((p) => [p.lon, p.lat] as [number, number]);
-		const last = points[points.length - 1]!;
-		const lengthMeters = polylineLengthMeters(coords);
-		const segIndex = order + 1;
-		const poiLabel = last.name ?? rte.name ?? `POI ${segIndex}`;
-		segments.push({
-			order: order++,
-			name: rte.name ?? poiLabel,
-			geometry: { type: 'LineString', coordinates: coords },
-			lengthMeters,
-			durationMin: estimateDurationMin(lengthMeters),
-			poi: {
-				lat: last.lat,
-				lon: last.lon,
-				label: poiLabel,
-			},
-		});
+		const rteName = rte.name;
+		const poiIdxs = points.map((p, i) => (p.name ? i : -1)).filter((i) => i >= 0);
+		if (poiIdxs.length === 0) {
+			const coords = points.map((p) => [p.lon, p.lat] as [number, number]);
+			const last = points[points.length - 1]!;
+			const lengthMeters = polylineLengthMeters(coords);
+			const segIndex = order + 1;
+			const poiLabel = last.name ?? rteName ?? `POI ${segIndex}`;
+			segments.push({
+				order: order++,
+				name: rteName ?? poiLabel,
+				geometry: { type: 'LineString', coordinates: coords },
+				lengthMeters,
+				durationMin: estimateDurationMin(lengthMeters),
+				poi: {
+					lat: last.lat,
+					lon: last.lon,
+					label: poiLabel,
+				},
+			});
+		} else {
+			let prev = 0;
+			for (const idx of poiIdxs) {
+				let start = prev;
+				let end = idx;
+				if (end - start < 1) {
+					if (idx + 1 < points.length) end = idx + 1;
+					else if (start - 1 >= 0) start = start - 1;
+					else {
+						prev = idx + 1;
+						continue;
+					}
+				}
+				const slice = points.slice(start, end + 1);
+				if (slice.length < 2) {
+					prev = idx + 1;
+					continue;
+				}
+				const coords = slice.map((p) => [p.lon, p.lat] as [number, number]);
+				const poi = points[idx]!;
+				const lengthMeters = polylineLengthMeters(coords);
+				const segIndex = order + 1;
+				const poiLabel = poi.name ?? rteName ?? `POI ${segIndex}`;
+				segments.push({
+					order: order++,
+					name: rteName ?? poiLabel,
+					geometry: { type: 'LineString', coordinates: coords },
+					lengthMeters,
+					durationMin: estimateDurationMin(lengthMeters),
+					poi: {
+						lat: poi.lat,
+						lon: poi.lon,
+						label: poiLabel,
+					},
+				});
+				prev = idx + 1;
+			}
+			if (prev < points.length - 1) {
+				const slice = points.slice(prev);
+				if (slice.length >= 2) {
+					const coords = slice.map((p) => [p.lon, p.lat] as [number, number]);
+					const last = points[points.length - 1]!;
+					const lengthMeters = polylineLengthMeters(coords);
+					const segIndex = order + 1;
+					const poiLabel = last.name ?? rteName ?? `POI ${segIndex}`;
+					segments.push({
+						order: order++,
+						name: rteName ?? poiLabel,
+						geometry: { type: 'LineString', coordinates: coords },
+						lengthMeters,
+						durationMin: estimateDurationMin(lengthMeters),
+						poi: {
+							lat: last.lat,
+							lon: last.lon,
+							label: rteName ?? poiLabel,
+						},
+					});
+				}
+			}
+		}
 	}
+	// Parse waypoints (wpt) and attach to segments if close enough
+	const rawWpts = asArray(root.wpt);
+	const waypoints = rawWpts.map((w) => ({ lat: parseFloat(w['@_lat']), lon: parseFloat(w['@_lon']), name: w.name }));
+	const WAYPOINT_MARGIN_METERS = process.env.WAYPOINT_MARGIN_METERS ? parseFloat(process.env.WAYPOINT_MARGIN_METERS) : 15;
+
+	// helper: convert lon/lat to local planar meters using equirectangular approx
+	const toXY = (lon: number, lat: number, refLat: number) => {
+		const x = ((lon * Math.PI) / 180) * 6371000 * Math.cos((refLat * Math.PI) / 180);
+		const y = ((lat * Math.PI) / 180) * 6371000;
+		return { x, y };
+	};
+
+	// project point onto segment and compute distance and along-distance
+	const projectOnSegment = (p: { lat: number; lon: number }, a: [number, number], b: [number, number], refLat: number) => {
+		const pa = toXY(a[0], a[1], refLat);
+		const pb = toXY(b[0], b[1], refLat);
+		const pp = toXY(p.lon, p.lat, refLat);
+		const vx = pb.x - pa.x;
+		const vy = pb.y - pa.y;
+		const wx = pp.x - pa.x;
+		const wy = pp.y - pa.y;
+		const vv = vx * vx + vy * vy;
+		let t = vv === 0 ? 0 : (vx * wx + vy * wy) / vv;
+		if (t < 0) t = 0;
+		if (t > 1) t = 1;
+		const cx = pa.x + t * vx;
+		const cy = pa.y + t * vy;
+		const dx = pp.x - cx;
+		const dy = pp.y - cy;
+		const dist = Math.sqrt(dx * dx + dy * dy);
+		// convert cx,cy back to lon/lat approximately
+		const lat = (cy / 6371000) * (180 / Math.PI);
+		const lon = (cx / (6371000 * Math.cos((refLat * Math.PI) / 180))) * (180 / Math.PI);
+		return { t, dist, proj: [lon, lat] as [number, number] };
+	};
+
+	// compute cumulative distances along coords
+	const cumulative = (coords: [number, number][]) => {
+		const cum: number[] = [0];
+		for (let i = 0; i < coords.length - 1; i++) cum.push(cum[i] + haversineDistance(coords[i], coords[i + 1]));
+		return cum;
+	};
+
+	// assign waypoints to nearest segment if within margin
+	const assigned: Map<number, Array<{ wpt: { lat: number; lon: number; name?: string }; along: number; proj: [number, number]; dist: number }>> = new Map();
+	for (const w of waypoints) {
+		if (!w) continue;
+		let best: { segIdx: number; dist: number; along: number; proj: [number, number] } | null = null;
+		for (let s = 0; s < segments.length; s++) {
+			const seg = segments[s]!;
+			const coords = seg.geometry.coordinates as [number, number][];
+			if (!coords || coords.length < 2) continue;
+			const refLat = coords.reduce((acc, c) => acc + c[1], 0) / coords.length;
+			const cum = cumulative(coords);
+			for (let i = 0; i < coords.length - 1; i++) {
+				const res = projectOnSegment(w, coords[i]!, coords[i + 1]!, refLat);
+				const segLen = cum[i + 1] - cum[i];
+				const along = cum[i] + res.t * segLen;
+				if (best == null || res.dist < best.dist) {
+					best = { segIdx: s, dist: res.dist, along, proj: res.proj };
+				}
+			}
+		}
+		if (best && best.dist <= WAYPOINT_MARGIN_METERS) {
+			if (!assigned.has(best.segIdx)) assigned.set(best.segIdx, []);
+			assigned.get(best.segIdx)!.push({ wpt: w, along: best.along, proj: best.proj, dist: best.dist });
+		}
+	}
+
+	// rebuild segments, splitting those that have assigned waypoints
+	const newSegments: ParsedGpxSegment[] = [];
+	for (let s = 0; s < segments.length; s++) {
+		const seg = segments[s]!;
+		const coords = seg.geometry.coordinates as [number, number][];
+		const assignedForSeg = assigned.get(s) ?? [];
+		if (assignedForSeg.length === 0) {
+			newSegments.push(seg);
+			continue;
+		}
+		// sort by along distance
+		assignedForSeg.sort((a, b) => a.along - b.along);
+		// build slices
+		const cum = cumulative(coords);
+		let cursor = 0; // index in coords
+		let current: [number, number][] = [coords[0]!];
+		for (const item of assignedForSeg) {
+			// find k where cum[k] <= along <= cum[k+1]
+			let k = 0;
+			while (k < cum.length - 1 && !(cum[k] <= item.along && item.along <= cum[k + 1])) k++;
+			// append coords up to k
+			for (let i = Math.max(cursor + 1, 1); i <= k; i++) current.push(coords[i]!);
+			// append projection point
+			current.push(item.proj);
+			// push segment ending at waypoint
+			const lengthMeters = polylineLengthMeters(current);
+			newSegments.push({
+				order: 0, // will be re-assigned later
+				name: item.wpt.name ?? seg.name,
+				geometry: { type: 'LineString', coordinates: current },
+				lengthMeters,
+				durationMin: estimateDurationMin(lengthMeters),
+				poi: { lat: item.wpt.lat, lon: item.wpt.lon, label: item.wpt.name ?? seg.name },
+			});
+			// reset current to start at projection
+			current = [item.proj];
+			cursor = k;
+		}
+		// trailing piece
+		for (let i = Math.max(cursor + 1, 1); i < coords.length; i++) current.push(coords[i]!);
+		if (current.length >= 2) {
+			const lengthMeters = polylineLengthMeters(current);
+			newSegments.push({
+				order: 0,
+				name: seg.name,
+				geometry: { type: 'LineString', coordinates: current },
+				lengthMeters,
+				durationMin: estimateDurationMin(lengthMeters),
+				poi: seg.poi, // keep original poi for trailing
+			});
+		}
+	}
+	// replace segments with newSegments and reassign order
+	segments.length = 0;
+	for (let i = 0; i < newSegments.length; i++) {
+		segments.push({ ...newSegments[i]!, order: i });
+	}
+
 	// Replace mode
 	const behavior = form.find((f) => f.name == 'behavior') ?? ('replace' as 'append' | 'replace');
 	const shouldAppend = behavior == 'append';
