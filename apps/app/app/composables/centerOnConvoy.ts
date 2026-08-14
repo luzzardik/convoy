@@ -2,6 +2,7 @@ import maplibregl from 'maplibre-gl';
 import type { Convoy, ConvoySegment } from '@convoy/db';
 
 export default function centerOnConvoy(convoy: Convoy & { segments: ConvoySegment[] }) {
+	if (!import.meta.client) return;
 	if (!convoy?.segments.length) return;
 	const bounds = new maplibregl.LngLatBounds();
 	for (const segment of convoy.segments) {
