@@ -407,6 +407,20 @@ export default defineEventHandler(async (event) => {
 	for (let i = 0; i < newSegments.length; i++) {
 		segments.push({ ...newSegments[i]!, order: i });
 	}
+	// If there is a waypoint (wpt) close to a segment's POI, prefer the waypoint (use its coordinates and name)
+	for (let i = 0; i < segments.length; i++) {
+		const seg = segments[i]!;
+		if (!seg.poi || seg.poi.lat == null || seg.poi.lon == null) continue;
+		let nearest: { wpt: { lat: number; lon: number; name?: string }; dist: number } | null = null;
+		for (const w of waypoints) {
+			const d = haversineDistance([seg.poi.lon!, seg.poi.lat!], [w.lon, w.lat]);
+			if (nearest == null || d < nearest.dist) nearest = { wpt: w, dist: d };
+		}
+		if (nearest && nearest.dist <= WAYPOINT_MARGIN_METERS) {
+			seg.name = nearest.wpt.name ?? seg.name;
+			seg.poi = { lat: nearest.wpt.lat, lon: nearest.wpt.lon, label: nearest.wpt.name ?? seg.poi.label };
+		}
+	}
 
 	// Replace mode
 	const behavior = form.find((f) => f.name == 'behavior') ?? ('replace' as 'append' | 'replace');
