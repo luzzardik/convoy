@@ -1,4 +1,5 @@
 <template>
+	<!-- TODO: ACTIVE convoys are not modifiable -->
 	<div class="max-w-5xl px-8 mx-auto py-8 space-y-3" v-if="convoy">
 		<div class="flex items-center justify-between">
 			<div>
@@ -9,6 +10,16 @@
 				<Button size="icon" variant="outline" asChild>
 					<NuxtLink to="/admin/convoys"> <ArrowLeftCircleIcon /> </NuxtLink>
 				</Button>
+				<Select v-model="convoyStatus" :disabled="convoy.status == 'ACTIVE'">
+					<SelectTrigger class="w-full">
+						<SelectValue placeholder="État du convoi" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="DRAFT">Brouillon</SelectItem>
+						<SelectItem value="READY">Prêt</SelectItem>
+						<SelectItem value="ARCHIVED">Archivé</SelectItem>
+					</SelectContent>
+				</Select>
 				<Button variant="destructive" size="icon"><Trash2Icon /></Button>
 			</div>
 		</div>
@@ -81,7 +92,7 @@
 
 <script setup lang="ts">
 // Imports
-import type { Convoy, ConvoyPOI, ConvoySegment } from '@convoy/db';
+import type { Convoy, ConvoyPOI, ConvoySegment, ConvoyStatus } from '@convoy/db';
 import { ArrowDownIcon, ArrowLeftCircleIcon, ArrowUpIcon, Trash2Icon } from '@lucide/vue';
 const $route = useRoute();
 
@@ -131,6 +142,18 @@ watch(convoy, () => {
 	nextTick(() => {
 		centerOnConvoy(convoy.value as any);
 	});
+});
+
+// Status
+const convoyStatus = ref<ConvoyStatus>('DRAFT');
+watch(convoy, () => {
+	convoyStatus.value = convoy.value?.status || 'DRAFT';
+});
+watch(convoyStatus, () => {
+	if (!convoy.value) return;
+	if (convoyStatus.value == convoy.value.status) return;
+	// TODO: notify success or failure
+	fetch(`/api/convoy/${convoy.value.id}/status`, { method: 'POST', body: JSON.stringify({ status: convoyStatus.value }), headers: { 'Content-Type': 'application/json' } });
 });
 
 // GPX import
