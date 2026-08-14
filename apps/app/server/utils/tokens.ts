@@ -118,3 +118,14 @@ export async function verifyToken(token: string | undefined, audience: string | 
 		return false;
 	}
 }
+
+// Read token
+export async function readToken(token: string | undefined) {
+	try {
+		if (typeof token !== 'string') return null;
+		const payload = jwt.decode(token, { complete: true });
+		return payload?.payload;
+	} catch (e) {
+		return null;
+	}
+}
