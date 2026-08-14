@@ -38,11 +38,14 @@
 					<MglMarker :coordinates="[rp.lon, rp.lat]">
 						<template v-slot:marker>
 							<div class="relative size-7">
-								<div class="absolute rounded-full bg-primary border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold" style="inset: 2px">{{ (rp.name || 'A').charAt(0).toUpperCase() }}</div>
-								<div v-if="rp.heading" class="absolute -top-1.5 left-1/2 size-0 -ml-1 border-l-4 border-r-4 border-l-transparent border-r-transparent border-b-7 border-b-primary" :style="`transform: rotate(${rp.heading}deg); transform-origin: 50% calc(100% + 10px);`"></div>
+							<div class="absolute rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold" :class="roleColorClass(rp.role)" style="inset: 2px">
+								<component v-if="rp.role && rp.role !== 'user'" :is="roleIcon(rp.role)" class="size-4 text-white" />
+								<span v-else>{{ (rp.name || 'A').charAt(0).toUpperCase() }}</span>
 							</div>
-						</template>
-					</MglMarker>
+							<div v-if="rp.heading" class="absolute -top-1.5 left-1/2 size-0 -ml-1 border-l-4 border-r-4 border-l-transparent border-r-transparent border-b-7" :class="roleColorArrowClass(rp.role)" :style="`transform: rotate(${rp.heading}deg); transform-origin: 50% calc(100% + 10px);`"></div>
+						</div>
+					</template>
+				</MglMarker>
 				</template>
 			</MglMap>
 		</ClientOnly>
@@ -95,7 +98,7 @@
 <script setup lang="ts">
 // Imports
 import type { Convoy, ConvoySegment, ConvoyPOI } from '@convoy/db';
-import { Loader2Icon, PlugZap2Icon, MapPinXInsideIcon } from '@lucide/vue';
+import { Loader2Icon, PlugZap2Icon, MapPinXInsideIcon, ScaleIcon, StarIcon, PlayIcon, RotateCwIcon } from '@lucide/vue';
 import * as WSH from '~~/shared/websockets';
 import { useGeolocation } from '@vueuse/core';
 import { useRouteNav } from '../composables/useRouteNav';
@@ -163,7 +166,7 @@ let shouldReconnect = true;
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
 
 // Positions
-const remotePositions = ref<Record<string, { lon: number; lat: number; heading?: number; ts: number; name?: string }>>({});
+const remotePositions = ref<Record<string, { lon: number; lat: number; heading?: number; ts: number; name?: string; role?: string }>>({});
 let posInterval: ReturnType<typeof setInterval> | undefined;
 let pingInterval: ReturnType<typeof setInterval> | undefined;
 let staleInterval: ReturnType<typeof setInterval> | undefined;
@@ -179,8 +182,55 @@ function applyRemotePosition(payload: WSH.PositionPayload) {
 			heading: payload.heading,
 			ts: payload.ts,
 			name: WSH.positionDisplayName(payload),
+			role: (payload as any).role ?? undefined,
 		},
 	};
+}
+
+// Helpers for role-based marker styling
+function roleColorClass(role?: string) {
+	switch (role) {
+		case 'regulator':
+			return 'bg-yellow-500';
+		case 'head':
+			return 'bg-red-500';
+		case 'opener':
+			return 'bg-green-500';
+		case 'sweep':
+			return 'bg-blue-500';
+		default:
+			return 'bg-primary';
+	}
+}
+
+function roleColorArrowClass(role?: string) {
+	switch (role) {
+		case 'regulator':
+			return 'border-b-yellow-500';
+		case 'head':
+			return 'border-b-red-500';
+		case 'opener':
+			return 'border-b-green-500';
+		case 'sweep':
+			return 'border-b-blue-500';
+		default:
+			return 'border-b-primary';
+	}
+}
+
+function roleIcon(role?: string) {
+	switch (role) {
+		case 'regulator':
+			return ScaleIcon;
+		case 'head':
+			return StarIcon;
+		case 'opener':
+			return PlayIcon;
+		case 'sweep':
+			return RotateCwIcon;
+		default:
+			return undefined;
+	}
 }
 
 function pruneStalePositions() {
@@ -218,6 +268,7 @@ function startPositionSync() {
 			ts: Date.now(),
 			displayname: wsSession.value.displayname,
 			username: wsSession.value.username,
+			role: wsSession.value.role ?? undefined,
 		});
 		try {
 			websocket.send(WSH.encodeFrame(WSH.CWSMessageType.POSITION, WSH.CWSFlag.ACK_REQUIRED, cseq!.next(), payload));

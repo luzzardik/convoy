@@ -246,6 +246,8 @@ export type PositionPayload = {
 	ts: number;
 	displayname?: string;
 	username?: string;
+	// Organizer role when applicable (e.g. 'regulator', 'head', 'opener', 'sweep')
+	role?: 'user' | 'regulator' | 'head' | 'opener' | 'sweep';
 };
 
 export function parsePositionPayload(payload: Uint8Array): PositionPayload | null {
@@ -260,6 +262,7 @@ export function parsePositionPayload(payload: Uint8Array): PositionPayload | nul
 				ts: typeof obj.ts === 'number' ? obj.ts : Date.now(),
 				displayname: typeof obj.displayname === 'string' ? obj.displayname : undefined,
 				username: typeof obj.username === 'string' ? obj.username : undefined,
+				role: typeof obj.role === 'string' ? obj.role : undefined,
 			};
 		}
 	} catch {
