@@ -116,7 +116,6 @@ export default defineWebSocketHandler({
 				peer.send(WSH.encodeFrame(WSH.CWSMessageType.AUTH_OK, WSH.CWSFlag.PRIORITY, sseq.next(), new TextEncoder().encode(JSON.stringify(peer.context.session))));
 				await replayPositions(peer, peer.context.session.convoyId, peer.context.session.sub);
 				return;
-			}
 
 			// Handle keep alive ping
 			case WSH.CWSMessageType.PING:
