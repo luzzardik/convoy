@@ -21,6 +21,15 @@
 								</div>
 							</template>
 						</MglMarker>
+						<MglMarker v-if="$geo.coords?.value && $geo.coords?.value?.longitude && $geo.coords?.value?.latitude" :coordinates="[$geo.coords.value.longitude, $geo.coords.value.latitude]">
+							<template v-slot:marker>
+								<div class="relative size-7">
+									<div class="absolute rounded-full bg-primary/5 animate-pulse" style="inset: -6px"></div>
+									<div class="absolute rounded-full bg-primary border-3 border-primary-foreground shadow-lg" style="inset: 4px"></div>
+									<div v-if="$geo.coords.value.heading" class="absolute -top-2 left-1/2 size-0 -ml-1.5 border-l-6 border-r-6 border-l-transparent border-r-transparent border-b-10 border-b-primary shadow-2xl" :style="`transform: rotate(${$geo.coords.value.heading}deg); transform-origin: 50% calc(100% + 14px);`"></div>
+								</div>
+							</template>
+						</MglMarker>
 					</MglGeoJsonSource>
 				</template>
 			</MglMap>
@@ -29,19 +38,51 @@
 	<!-- Directions -->
 	<div class="z-10 absolute bottom-0 left-0 bg-background text-foreground w-full p-4 border-t-4 border-primary">
 		<!-- Websocket status -->
-		<div class="mb-2 bg-gray-100 border border-gray-300 text-gray-700 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-if="preparing"><Loader2Icon class="animate-spin size-4" /> Préparation en cours...</div>
-		<div class="mb-2 bg-red-100 border border-red-300 text-red-700 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'disconnected'"><PlugZap2Icon class="size-4" /> Connexion perdue.</div>
-		<div class="mb-2 bg-orange-100 border border-orange-300 text-orange-700 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'connecting'"><PlugZap2Icon class="size-4" /> Connexion en cours...</div>
-		<div class="mb-2 bg-indigo-100 border border-indigo-300 text-indigo-700 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'authenticating'"><Loader2Icon class="animate-spin size-4" /> Identification auprès du serveur...</div>
+		<div class="mb-2 bg-gray-100 text-gray-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-if="preparing"><Loader2Icon class="animate-spin size-4" /> Préparation en cours...</div>
+		<div class="mb-2 bg-red-100 text-red-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'disconnected'"><PlugZap2Icon class="size-4" /> Connexion perdue.</div>
+		<div class="mb-2 bg-orange-100 text-orange-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'connecting'"><PlugZap2Icon class="size-4" /> Connexion en cours...</div>
+		<div class="mb-2 bg-indigo-100 text-indigo-800 text-sm py-1.5 px-2 rounded text-center flex items-center justify-center gap-2" v-else-if="websocketStatus == 'authenticating'"><Loader2Icon class="animate-spin size-4" /> Identification auprès du serveur...</div>
+		<!-- Directions -->
+		<div class="divide-y">
+			<div class="flex items-center gap-4 pb-4">
+				<ArrowLeftIcon class="size-10 text-primary" />
+				<div>
+					<div class="text-sm">Dans XX mètres</div>
+					<div class="font-bold text-lg text-primary">Tournez à gauche</div>
+					<div class="text-xs">Rue de je sais pas</div>
+				</div>
+			</div>
+			<div class="flex items-center divide-x gap-4 py-4">
+				<div class="flex-1">
+					<div class="uppercase text-xs text-muted-foreground">Prochain point de passage</div>
+					<div class="flex items-baseline gap-2">
+						<div class="text-lg font-bold">Valeur</div>
+						<div class="text-sm text-muted-foreground">· Détail</div>
+					</div>
+				</div>
+				<div class="flex-1">
+					<div class="uppercase text-xs text-muted-foreground">Arrivée</div>
+					<div class="flex items-baseline gap-2">
+						<div class="text-lg font-bold">Valeur</div>
+						<div class="text-sm text-muted-foreground">· Détail</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Footer -->
+		<div v-if="convoy || wsSession" class="text-xs text-muted-foreground divide-x flex items-center justify-center">
+			<span class="px-2" v-if="convoy">{{ convoy.name }}</span>
+			<span class="px-2" v-if="wsSession && (wsSession.displayname || wsSession.username)">{{ wsSession.displayname || wsSession.username }}</span>
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 // Imports
 import type { Convoy, ConvoySegment, ConvoyPOI } from '@convoy/db';
-import { Loader2Icon, PlugZap2Icon } from '@lucide/vue';
-import { cs } from 'zod/v4/locales';
+import { Loader2Icon, PlugZap2Icon, ArrowLeftIcon, ArrowRightIcon } from '@lucide/vue';
 import * as WSH from '~~/shared/websockets';
+import { useGeolocation } from '@vueuse/core';
 
 // Page meta
 useSeoMeta({ title: 'Convoi - Convoy' });
@@ -63,6 +104,15 @@ const MAP_STYLE: any = {
 	layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
 
+// Geolocation
+const $geo = useGeolocation();
+const updateCoords = debounce(() => {
+	// TODO: disable tp if navigating around
+	if (!$geo.coords.value?.longitude || !$geo.coords.value?.latitude) return;
+	centerOnCoords([$geo.coords.value.longitude, $geo.coords.value.latitude]);
+}, 1000);
+let ucInterval = setInterval(() => updateCoords(), 500);
+
 // Convoy
 type CompleteConvoy = Convoy & { segments: (ConvoySegment & { poi: ConvoyPOI })[] };
 const convoy = ref<CompleteConvoy | null>(null);
@@ -70,6 +120,7 @@ const convoy = ref<CompleteConvoy | null>(null);
 // Websocket
 const websocketStatus = ref<'connecting' | 'authenticating' | 'connected' | 'disconnected'>('disconnected');
 const wsToken = ref<string>();
+const wsSession = ref<WSH.ConvoyWSSession | null>(null);
 let websocket: WebSocket | undefined, cseq: WSH.Sequence | undefined;
 function createWebsocket() {
 	if (!wsToken.value) return;
@@ -83,7 +134,7 @@ function createWebsocket() {
 		websocketStatus.value = 'authenticating';
 		websocket!.send(WSH.encodeFrame(WSH.CWSMessageType.HELLO, 0, cseq!.next()));
 	});
-	websocket.addEventListener('message', (rawmessage) => {
+	websocket.addEventListener('message', async (rawmessage) => {
 		console.log('[Websocket] Incoming message');
 		// Validate and decode frame
 		const frame = WSH.decodeFrame(rawmessage.data);
@@ -95,19 +146,35 @@ function createWebsocket() {
 			case WSH.CWSMessageType.AUTH_REQ:
 				websocket!.send(WSH.encodeFrame(WSH.CWSMessageType.AUTH_JWT, WSH.CWSFlag.ACK_REQUIRED | WSH.CWSFlag.PRIORITY, cseq!.next(), new TextEncoder().encode(wsToken.value)));
 				break;
+
+			// Auth failed
+			case WSH.CWSMessageType.AUTH_ERROR:
+				// TODO: try to renew the token rather than kill
+				navigateTo('/');
+				break;
+
+			// Auth OK
+			case WSH.CWSMessageType.AUTH_OK:
+				// Decode session
+				const jsonSession = JSON.parse(new TextDecoder().decode(frame.payload));
+				wsSession.value = jsonSession;
+				websocketStatus.value = 'connected';
+				// Fetch convoy
+				const convoyData = await fetch('/api/convoy/' + jsonSession.convoyId + '?include=segments,segments.poi').then((_q) => _q.json());
+				// TODO: manage errors
+				convoy.value = convoyData as CompleteConvoy;
+				centerOnConvoy(convoy.value);
+				break;
 		}
 	});
 	websocket.addEventListener('error', (error) => {
 		console.error('[Websocket] Something went wrong', error);
 	});
 	websocket.addEventListener('close', (e) => {
-		console.log('[Websocket] Disconnected.');
+		console.log('[Websocket] Disconnected. Reconnecting...');
 		websocketStatus.value = 'disconnected';
-		if (!e.wasClean) {
-			console.log('[Websocket] Not clean. Reconnecting...');
-			closeWebsocket();
-			createWebsocket();
-		}
+		closeWebsocket();
+		createWebsocket();
 	});
 }
 function closeWebsocket() {
@@ -125,5 +192,11 @@ onMounted(() => {
 	// Connect to Websocket
 	wsToken.value = cvytk;
 	createWebsocket();
+	$geo.resume();
+});
+onUnmounted(() => {
+	closeWebsocket();
+	clearInterval(ucInterval);
+	$geo.pause();
 });
 </script>
