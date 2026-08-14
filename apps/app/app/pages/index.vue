@@ -39,6 +39,13 @@ async function joinConvoy() {
 	try {
 		let _q = await fetch(`/api/convoy/${convoyCode.value}`).then((_q) => _q.json());
 		if (_q.error) throw _q.error;
+		// Can join?
+		if (_q.status !== 'READY' && _q.status !== 'ACTIVE') {
+			convoyError.value = useErrorCode('convoy_unavailable');
+			convoyLoading.value = false;
+			return;
+		}
+		// Send to join page
 		navigateTo('/join/' + convoyCode.value);
 	} catch (e) {
 		console.error('An error occured whilst verifying convoy:', e);

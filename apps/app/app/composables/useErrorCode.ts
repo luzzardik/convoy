@@ -7,6 +7,7 @@ export default function useErrorCode(code: string) {
 			invalid_credentials: 'Mot de passe incorrect.',
 			server_not_ready: "Le serveur n'est pas prêt ou présente une erreur de configuration.",
 			unexpected_issue: 'Une erreur inattendue est survenue.',
+			convoy_unavailable: 'Vous ne pouvez pas rejoindre ce convoi.',
 		}[code.toLowerCase()] ?? `Une erreur inattendue est survenue. (${code})`
 	);
 }
